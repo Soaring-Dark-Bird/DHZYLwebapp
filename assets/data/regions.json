@@ -1,0 +1,55 @@
+{
+  "regions": [
+    {
+      "id": "south",
+      "name": "南部区块",
+      "description": "南山经·招摇山一带，新手起步区域",
+      "image": "/assets/images/maps/map-south.png",
+      "levelRange": [10, 9],
+      "monsters": ["monster-10-1", "monster-9-1", "monster-9-2"],
+      "gatherables": [
+        { "materialId": "mat-10-1", "name": "山铁" },
+        { "materialId": "mat-9-3", "name": "精铁" }
+      ]
+    },
+    {
+      "id": "central",
+      "name": "中部区块",
+      "description": "中山经·霍山一带，进阶区域",
+      "image": "/assets/images/maps/map-central.png",
+      "levelRange": [9, 8],
+      "monsters": ["monster-9-1", "monster-9-2", "monster-8-1", "monster-8-2"],
+      "gatherables": [
+        { "materialId": "mat-8-1", "name": "灵犀藤" },
+        { "materialId": "mat-8-4", "name": "赤铜矿石" }
+      ]
+    },
+    {
+      "id": "north",
+      "name": "北部区块",
+      "description": "北海经·，未探索区域",
+      "image": "/assets/images/maps/map-north.png",
+      "levelRange": [1, 1],
+      "monsters": [],
+      "gatherables": []
+    },
+    {
+      "id": "east",
+      "name": "东部区块",
+      "description": "东海经·，未探索区域",
+      "image": "/assets/images/maps/map-east.png",
+      "levelRange": [1, 1],
+      "monsters": [],
+      "gatherables": []
+    },
+    {
+      "id": "west",
+      "name": "西部区块",
+      "description": "西山经·，未探索区域",
+      "image": "/assets/images/maps/map-west.png",
+      "levelRange": [1, 1],
+      "monsters": [],
+      "gatherables": []
+    }
+  ]
+}

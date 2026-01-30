@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大荒斩妖录 - 调试</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Microsoft YaHei', sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+    h1 { color: #c41e3a; }
+    #log {
+      background: #1a1a2e;
+      border: 1px solid #3a3a4a;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-family: monospace;
+      font-size: 13px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .log-entry { margin: 4px 0; padding: 2px 0; }
+    .success { color: #4a9c5a; }
+    .error { color: #c41e3a; }
+    .info { color: #4a9cbc; }
+    .warn { color: #cc9c4a; }
+    button {
+      background: #c41e3a;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px 5px 5px 0;
+    }
+    button:hover { background: #a01830; }
+    #iframe-container {
+      border: 2px solid #3a3a4a;
+      border-radius: 8px;
+      margin-top: 20px;
+      height: 500px;
+      background: #0a0a0f;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 大荒斩妖录 - 调试工具</h1>
+
+  <div>
+    <button onclick="testAll()">🚀 运行完整测试</button>
+    <button onclick="loadGame()">🎮 加载游戏</button>
+    <button onclick="clearLog()">🗑️ 清除日志</button>
+    <button onclick="openDevTools()">🔧 打开开发者工具</button>
+  </div>
+
+  <div id="log"></div>
+
+  <div id="iframe-container">
+    <iframe id="game-frame"></iframe>
+  </div>
+
+  <script>
+    const logEl = document.getElementById('log');
+    const frame = document.getElementById('game-frame');
+
+    function log(msg, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      const className = `log-entry ${type}`;
+      logEl.innerHTML += `<div class="${className}">[${time}] ${msg}</div>`;
+      logEl.scrollTop = logEl.scrollHeight;
+      console.log(`[${type.toUpperCase()}]`, msg);
+    }
+
+    function clearLog() {
+      logEl.innerHTML = '';
+    }
+
+    function openDevTools() {
+      log('按 F12 或 Ctrl+Shift+I 打开浏览器开发者工具', 'info');
+      log('查看 Console 标签页以获取详细错误信息', 'info');
+    }
+
+    async function testAll() {
+      clearLog();
+      log('='.repeat(50), 'info');
+      log('开始测试大荒斩妖录...', 'info');
+      log('='.repeat(50), 'info');
+
+      let passed = 0;
+      let failed = 0;
+
+      // Test 1: Server connectivity
+      log('\n【测试 1】服务器连接', 'info');
+      try {
+        const resp = await fetch('http://localhost:3000/');
+        if (resp.ok) {
+          log('✓ 主页加载成功 (200 OK)', 'success');
+          passed++;
+        } else {
+          log(`✗ 主页返回状态码: ${resp.status}`, 'error');
+          failed++;
+        }
+      } catch (e) {
+        log(`✗ 无法连接到服务器: ${e.message}`, 'error');
+        failed++;
+      }
+
+      // Test 2: CSS files
+      log('\n【测试 2】CSS 样式文件', 'info');
+      const cssFiles = ['/styles/themes.css', '/styles/main.css', '/styles/animations.css'];
+      for (const file of cssFiles) {
+        try {
+          const resp = await fetch('http://localhost:3000' + file);
+          if (resp.ok) {
+            log(`✓ ${file}`, 'success');
+            passed++;
+          } else {
+            log(`✗ ${file} (${resp.status})`, 'error');
+            failed++;
+          }
+        } catch (e) {
+          log(`✗ ${file}: ${e.message}`, 'error');
+          failed++;
+        }
+      }
+
+      // Test 3: JavaScript modules
+      log('\n【测试 3】JavaScript 模块', 'info');
+      const jsModules = [
+        '/src/core/GameState.js',
+        '/src/core/BattleSystem.js',
+        '/src/ui/IntroScreen.js',
+        '/src/ui/MapView.js'
+      ];
+      for (const mod of jsModules) {
+        try {
+          const resp = await fetch('http://localhost:3000' + mod);
+          if (resp.ok) {
+            const code = await resp.text();
+            const hasExport = code.includes('export');
+            log(`✓ ${mod} (有导出: ${hasExport})`, 'success');
+            passed++;
+          } else {
+            log(`✗ ${mod} (${resp.status})`, 'error');
+            failed++;
+          }
+        } catch (e) {
+          log(`✗ ${mod}: ${e.message}`, 'error');
+          failed++;
+        }
+      }
+
+      // Test 4: Data files
+      log('\n【测试 4】游戏数据文件', 'info');
+      const dataFiles = [
+        '/assets/data/blades.json',
+        '/assets/data/monsters.json',
+        '/assets/data/materials.json',
+        '/assets/data/regions.json',
+        '/assets/data/recipes.json'
+      ];
+      for (const file of dataFiles) {
+        try {
+          const resp = await fetch('http://localhost:3000' + file);
+          if (resp.ok) {
+            const data = await resp.json();
+            const keys = Object.keys(data);
+            log(`✓ ${file} (${keys[0]}: ${Array.isArray(data[keys[0]]) ? data[keys[0]].length + ' 项' : 'OK'})`, 'success');
+            passed++;
+          } else {
+            log(`✗ ${file} (${resp.status})`, 'error');
+            failed++;
+          }
+        } catch (e) {
+          log(`✗ ${file}: ${e.message}`, 'error');
+          failed++;
+        }
+      }
+
+      // Test 5: Module import test
+      log('\n【测试 5】ES 模块导入测试', 'info');
+      try {
+        const { getState } = await import('http://localhost:3000/src/core/GameState.js');
+        const state = getState();
+        log(`✓ GameState 模块导入成功`, 'success');
+        log(`  当前刀剑: ${state.currentBlade.id} (${state.currentBlade.level}级)`, 'info');
+        passed++;
+      } catch (e) {
+        log(`✗ 模块导入失败: ${e.message}`, 'error');
+        failed++;
+      }
+
+      // Summary
+      log('\n' + '='.repeat(50), 'info');
+      log(`测试完成: ${passed} 通过, ${failed} 失败`, failed === 0 ? 'success' : 'warn');
+      log('='.repeat(50), 'info');
+
+      if (failed === 0) {
+        log('\n✅ 所有测试通过！点击"加载游戏"按钮启动游戏', 'success');
+      } else {
+        log('\n⚠️ 部分测试失败，请检查错误信息', 'warn');
+      }
+    }
+
+    function loadGame() {
+      clearLog();
+      log('正在加载游戏...', 'info');
+      frame.src = 'http://localhost:3000';
+      log('游戏已加载到下方框架', 'success');
+      log('\n提示:', 'info');
+      log('- 如果看不到游戏，请检查浏览器控制台 (F12)', 'info');
+      log('- 点击"打开开发者工具"查看详细错误', 'info');
+    }
+
+    // Capture errors from iframe
+    window.addEventListener('message', (e) => {
+      if (e.data.type === 'error') {
+        log(`游戏错误: ${e.data.message}`, 'error');
+      }
+      if (e.data.type === 'log') {
+        log(`游戏: ${e.data.message}`, 'info');
+      }
+    });
+
+    // Auto-run test on page load
+    window.addEventListener('load', () => {
+      log('调试工具已就绪', 'success');
+      log('点击"运行完整测试"开始检查', 'info');
+    });
+  </script>
+</body>
+</html>

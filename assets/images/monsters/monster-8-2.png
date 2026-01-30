@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="#1a1a2e" rx="10"/>
+  <!-- 蠪蚳 - boar-like with horns -->
+  <ellipse cx="60" cy="75" rx="35" ry="30" fill="#4a3728"/>
+  <!-- Head -->
+  <ellipse cx="60" cy="38" rx="28" ry="25" fill="#5a4738"/>
+  <!-- Horns (distinctive - multiple horns) -->
+  <path d="M40 22 Q30 5 45 15" stroke="#888" stroke-width="5" fill="none"/>
+  <path d="M80 22 Q90 5 75 15" stroke="#888" stroke-width="5" fill="none"/>
+  <path d="M48 18 Q42 8 52 12" stroke="#666" stroke-width="3" fill="none"/>
+  <path d="M72 18 Q78 8 68 12" stroke="#666" stroke-width="3" fill="none"/>
+  <!-- Snout -->
+  <ellipse cx="60" cy="52" rx="15" ry="10" fill="#3a2718"/>
+  <circle cx="55" cy="50" r="3" fill="#222"/>
+  <circle cx="65" cy="50" r="3" fill="#222"/>
+  <!-- Angry eyes -->
+  <path d="M45 32 L55 28" stroke="#222" stroke-width="3"/>
+  <path d="M75 32 L65 28" stroke="#222" stroke-width="3"/>
+  <circle cx="50" cy="34" r="4" fill="#c41e3a"/>
+  <circle cx="70" cy="34" r="4" fill="#c41e3a"/>
+  <!-- Tusks -->
+  <path d="M50 60 Q45 70 50 65" stroke="#f5f5dc" stroke-width="3" fill="none"/>
+  <path d="M70 60 Q75 70 70 65" stroke="#f5f5dc" stroke-width="3" fill="none"/>
+  <!-- Legs -->
+  <rect x="32" y="98" width="10" height="15" fill="#4a3728"/>
+  <rect x="48" y="98" width="10" height="15" fill="#4a3728"/>
+  <rect x="62" y="98" width="10" height="15" fill="#4a3728"/>
+  <rect x="78" y="98" width="10" height="15" fill="#4a3728"/>
+  <!-- Level -->
+  <text x="60" y="115" text-anchor="middle" fill="#c41e3a" font-size="10" font-weight="bold">8级</text>
+  <text x="60" y="108" text-anchor="middle" fill="#ccc" font-size="9">蠪蚳</text>
+</svg>

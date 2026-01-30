@@ -1,0 +1,98 @@
+{
+  "monsters": [
+    {
+      "id": "monster-10-1",
+      "level": 10,
+      "name": "狌狌",
+      "description": "《南山经·招摇山》：状如禺而白耳，伏行人走",
+      "image": "/assets/images/monsters/monster-10-1.png",
+      "region": "south",
+      "hp": 100,
+      "attackPower": 5,
+      "drops": [
+        { "materialId": "mat-10-1", "quantity": [2, 4] },
+        { "materialId": "mat-10-2", "quantity": [3, 5] }
+      ]
+    },
+    {
+      "id": "monster-9-1",
+      "level": 9,
+      "name": "鹿蜀",
+      "description": "《南山经·杻阳山》：状如马而白首，其文如虎而赤尾",
+      "image": "/assets/images/monsters/monster-9-1.png",
+      "region": "south",
+      "hp": 100,
+      "attackPower": 5,
+      "drops": [
+        { "materialId": "mat-9-2", "quantity": [1, 2] }
+      ]
+    },
+    {
+      "id": "monster-9-2",
+      "level": 9,
+      "name": "青兕",
+      "description": "《南山经·祷过山》：其状如牛，苍黑，一角",
+      "image": "/assets/images/monsters/monster-9-2.png",
+      "region": "south",
+      "hp": 100,
+      "attackPower": 5,
+      "drops": [
+        { "materialId": "mat-9-3", "quantity": [3, 5] },
+        { "materialId": "mat-9-7", "quantity": [3, 5] }
+      ]
+    },
+    {
+      "id": "monster-9-3",
+      "level": 9,
+      "name": "瞿如",
+      "description": "《南山经·祷过山》：状如鹗而白首，三足",
+      "image": "/assets/images/monsters/monster-9-2.png",
+      "region": "south",
+      "hp": 100,
+      "attackPower": 5,
+      "drops": [
+        { "materialId": "mat-9-7", "quantity": [2, 4] }
+      ]
+    },
+    {
+      "id": "monster-9-4",
+      "level": 9,
+      "name": "蚩尤残魂",
+      "description": "《海内经》：蚩尤残魂幼体",
+      "image": "/assets/images/monsters/monster-9-1.png",
+      "region": "south",
+      "hp": 100,
+      "attackPower": 5,
+      "drops": [
+        { "materialId": "mat-9-4", "quantity": [1, 2] }
+      ]
+    },
+    {
+      "id": "monster-8-1",
+      "level": 8,
+      "name": "朏朏",
+      "description": "《中山经·霍山》：其状如狸，白尾，有鬣",
+      "image": "/assets/images/monsters/monster-8-1.png",
+      "region": "central",
+      "hp": 100,
+      "attackPower": 5,
+      "drops": [
+        { "materialId": "mat-8-1", "quantity": [2, 4] },
+        { "materialId": "mat-8-2", "quantity": [3, 5] }
+      ]
+    },
+    {
+      "id": "monster-8-2",
+      "level": 8,
+      "name": "蠪蚳",
+      "description": "《中山经·昆吾山》：其状如彘而有角",
+      "image": "/assets/images/monsters/monster-8-2.png",
+      "region": "central",
+      "hp": 100,
+      "attackPower": 5,
+      "drops": [
+        { "materialId": "mat-8-3", "quantity": [1, 2] }
+      ]
+    }
+  ]
+}

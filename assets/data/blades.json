@@ -1,0 +1,28 @@
+{
+  "blades": [
+    {
+      "id": "blade-10",
+      "level": 10,
+      "name": "山铁樵刀",
+      "description": "凡器，无灵无韵。刀形短直，木柄缠粗麻绳。",
+      "image": "/assets/images/knives/knife-10.png",
+      "attackPower": 10
+    },
+    {
+      "id": "blade-9",
+      "level": 9,
+      "name": "青骨短刀",
+      "description": "镶青兕之骨，具百兽之气。刀形窄细微弯，苍青色骨柄。",
+      "image": "/assets/images/knives/knife-9.png",
+      "attackPower": 20
+    },
+    {
+      "id": "blade-8",
+      "level": 8,
+      "name": "庖丁解牛刀",
+      "description": "缠灵犀藤，刃薄如翼。长一尺五，深褐色藤柄。",
+      "image": "/assets/images/knives/knife-8.png",
+      "attackPower": 35
+    }
+  ]
+}

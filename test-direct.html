@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Direct Load Test</title>
+</head>
+<body>
+  <h1>测试直接加载游戏模块</h1>
+  <div id="results"></div>
+
+  <script type="module">
+    const results = document.getElementById('results');
+
+    function log(msg, type = 'info') {
+      const colors = {
+        success: '#4a9c5a',
+        error: '#c41e3a',
+        info: '#4a9cbc'
+      };
+      results.innerHTML += `<div style="color:${colors[type]};margin:5px 0;">${msg}</div>`;
+      console.log(msg);
+    }
+
+    log('开始测试...', 'info');
+
+    try {
+      // Test 1: Load GameState
+      log('测试 1: 加载 GameState.js', 'info');
+      const { getState, getCurrentBlade, getSettings } = await import('/src/core/GameState.js');
+      log('✓ GameState.js 加载成功', 'success');
+      log('  - getState: ' + typeof getState, 'info');
+      log('  - getCurrentBlade: ' + typeof getCurrentBlade, 'info');
+
+      const state = getState();
+      log('  - 当前刀剑: ' + state.currentBlade.id, 'info');
+
+      // Test 2: Load main.js
+      log('测试 2: 加载 main.js', 'info');
+      await import('/src/main.js');
+      log('✓ main.js 加载成功', 'success');
+
+      // Test 3: Check if screens were created
+      log('测试 3: 检查 DOM 元素', 'info');
+      setTimeout(() => {
+        const app = document.getElementById('app');
+        if (app) {
+          log('✓ #app 元素存在', 'success');
+          log('  - 子元素数量: ' + app.children.length, 'info');
+          if (app.children.length > 0) {
+            log('  - 第一个子元素: ' + app.children[0].id, 'info');
+          }
+        } else {
+          log('✗ #app 元素不存在', 'error');
+        }
+
+        log('', 'info');
+        log('=== 测试完成 ===', 'success');
+      }, 1000);
+
+    } catch (e) {
+      log('✗ 错误: ' + e.message, 'error');
+      log('  堆栈: ' + e.stack, 'error');
+    }
+  </script>
+</body>
+</html>

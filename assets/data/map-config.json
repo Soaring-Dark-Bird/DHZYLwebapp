@@ -1,0 +1,93 @@
+{
+  "version": "1.0.0",
+  "map": "fullmap.png",
+  "monsters": [
+    {
+      "id": "monster-10-1",
+      "name": "狌狌",
+      "level": 10,
+      "description": "《南山经·招摇山》：状如禺而白耳，伏行人走",
+      "position": { "x": 39.7, "y": 75 },
+      "hitboxRadius": 4.6,
+      "region": "south"
+    },
+    {
+      "id": "monster-9-1",
+      "name": "鹿蜀",
+      "level": 9,
+      "description": "《南山经·杻阳山》：状如马而白首，其文如虎而赤尾",
+      "position": { "x": 33.2, "y": 83.5 },
+      "hitboxRadius": 4.3,
+      "region": "south"
+    },
+    {
+      "id": "monster-9-2",
+      "name": "青兕",
+      "level": 9,
+      "description": "《南山经·祷过山》：其状如牛，苍黑，一角",
+      "position": { "x": 60.1, "y": 76.6 },
+      "hitboxRadius": 4.1,
+      "region": "south"
+    },
+    {
+      "id": "monster-9-3",
+      "name": "瞿如",
+      "level": 9,
+      "description": "《南山经·祷过山》：状如鹗而白首，三足",
+      "position": { "x": 60.5, "y": 86.8 },
+      "hitboxRadius": 4.2,
+      "region": "south"
+    },
+    {
+      "id": "monster-9-4",
+      "name": "蚩尤残魂",
+      "level": 9,
+      "description": "《海内经》：蚩尤残魂幼体",
+      "position": { "x": 74.2, "y": 79.4 },
+      "hitboxRadius": 4.8,
+      "region": "south"
+    }
+  ],
+  "resources": [
+    {
+      "id": "res-10-1",
+      "materialId": "mat-9-5",
+      "name": "山铁",
+      "level": 10,
+      "description": "10级山铁樵刀初始锻造材料",
+      "position": { "x": 67.5, "y": 90.7 },
+      "hitboxRadius": 2,
+      "region": "south"
+    },
+    {
+      "id": "res-9-1",
+      "materialId": "mat-9-4",
+      "name": "精铁",
+      "level": 9,
+      "description": "9级青骨短刀合成核心材料",
+      "position": { "x": 71.8, "y": 91 },
+      "hitboxRadius": 2,
+      "region": "south"
+    },
+    {
+      "id": "res-9-2",
+      "materialId": "mat-9-1",
+      "name": "桂木纤维",
+      "level": 9,
+      "description": "桂木的纤维，用于制作刀柄",
+      "position": { "x": 75.9, "y": 91.1 },
+      "hitboxRadius": 2,
+      "region": "south"
+    }
+  ],
+  "regions": [
+    {
+      "id": "south",
+      "name": "南山区块",
+      "description": "南山经·招摇山一带",
+      "position": { "x": 52, "y": 52 },
+      "hitboxRadius": 12,
+      "levelRange": [10, 9]
+    }
+  ]
+}

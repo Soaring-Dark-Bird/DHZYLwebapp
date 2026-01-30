@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大荒斩妖录 - 测试页面</title>
+  <link rel="stylesheet" href="/styles/themes.css">
+  <link rel="stylesheet" href="/styles/main.css">
+  <link rel="stylesheet" href="/styles/animations.css">
+  <style>
+    #debug-log {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 200px;
+      background: rgba(0,0,0,0.9);
+      color: #0f0;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 10px;
+      overflow-y: auto;
+      border-top: 2px solid #0f0;
+      z-index: 9999;
+    }
+    .log-error { color: #f55; }
+    .log-warn { color: #ff5; }
+    .log-info { color: #5ff; }
+    .log-success { color: #5f5; }
+    #app-container {
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app-container">
+    <h1>大荒斩妖录 - 调试模式</h1>
+    <button onclick="runTests()">运行测试</button>
+    <button onclick="clearLog()">清除日志</button>
+    <div id="test-results"></div>
+  </div>
+
+  <div id="debug-log"></div>
+
+  <script>
+    const logEl = document.getElementById('debug-log');
+    const resultsEl = document.getElementById('test-results');
+
+    function log(msg, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      const className = `log-${type}`;
+      logEl.innerHTML += `<div class="${className}">[${time}] ${msg}</div>`;
+      logEl.scrollTop = logEl.scrollHeight;
+      console.log(`[${type.toUpperCase()}]`, msg);
+    }
+
+    function clearLog() {
+      logEl.innerHTML = '';
+      resultsEl.innerHTML = '';
+    }
+
+    // Capture errors
+    window.addEventListener('error', (e) => {
+      log(`Error: ${e.message} at ${e.filename}:${e.lineno}`, 'error');
+    });
+
+    window.addEventListener('unhandledrejection', (e) => {
+      log(`Promise rejection: ${e.reason}`, 'error');
+    });
+
+    async function runTests() {
+      clearLog();
+      log('开始测试...', 'info');
+
+      resultsEl.innerHTML = '<h2>测试中...</h2>';
+
+      const tests = [
+        { name: '检查 Vite 客户端', url: '/@vite/client' },
+        { name: '检查 main.js', url: '/src/main.js' },
+        { name: '检查 GameState', url: '/src/core/GameState.js' },
+        { name: '检查主题 CSS', url: '/styles/themes.css' },
+        { name: '检查主 CSS', url: '/styles/main.css' },
+        { name: '检查怪物数据', url: '/assets/data/monsters.json' },
+        { name: '检查刀剑数据', url: '/assets/data/blades.json' }
+      ];
+
+      let passed = 0;
+      let failed = 0;
+
+      for (const test of tests) {
+        try {
+          const resp = await fetch(test.url);
+          if (resp.ok) {
+            log(`✓ ${test.name}: ${resp.status}`, 'success');
+            passed++;
+          } else {
+            log(`✗ ${test.name}: ${resp.status}`, 'error');
+            failed++;
+          }
+        } catch (e) {
+          log(`✗ ${test.name}: ${e.message}`, 'error');
+          failed++;
+        }
+      }
+
+      log(`\n测试完成: ${passed} 通过, ${failed} 失败`, failed > 0 ? 'warn' : 'success');
+
+      // Try to load main module
+      log('\n尝试加载主模块...', 'info');
+      try {
+        await import('/src/main.js');
+        log('✓ 主模块加载成功', 'success');
+      } catch (e) {
+        log(`✗ 主模块加载失败: ${e.message}`, 'error');
+        log(`  ${e.stack}`, 'error');
+      }
+
+      resultsEl.innerHTML = `
+        <h2>测试结果</h2>
+        <p class="${failed > 0 ? 'log-error' : 'log-success'}">
+          通过: ${passed} | 失败: ${failed}
+        </p>
+      `;
+    }
+
+    log('调试页面已加载。点击"运行测试"开始。', 'info');
+  </script>
+</body>
+</html>

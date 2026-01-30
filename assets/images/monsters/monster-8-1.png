@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="#1a1a2e" rx="10"/>
+  <!-- 朏朏 - cat-like with white tail and mane -->
+  <ellipse cx="60" cy="70" rx="28" ry="25" fill="#d4a574"/>
+  <!-- Head -->
+  <circle cx="60" cy="40" r="22" fill="#d4a574"/>
+  <!-- Pointy ears -->
+  <path d="M42 25 L38 10 L50 20 Z" fill="#d4a574"/>
+  <path d="M78 25 L82 10 L70 20 Z" fill="#d4a574"/>
+  <!-- Mane (along back) -->
+  <path d="M45 55 Q60 50 75 55" stroke="#c4946a" stroke-width="8" fill="none"/>
+  <!-- Face -->
+  <ellipse cx="52" cy="38" r="6" fill="#f5e6d3"/>
+  <ellipse cx="68" cy="38" r="6" fill="#f5e6d3"/>
+  <circle cx="52" cy="38" r="3" fill="#4a90d9"/>
+  <circle cx="68" cy="38" r="3" fill="#4a90d9"/>
+  <ellipse cx="60" cy="50" rx="4" ry="3" fill="#e8b89d"/>
+  <!-- White tail (distinctive) -->
+  <path d="M88 65 Q105 60 100 80 Q95 90 88 70" fill="#f5f5dc"/>
+  <!-- Legs -->
+  <ellipse cx="40" cy="95" rx="6" ry="15" fill="#d4a574"/>
+  <ellipse cx="55" cy="95" rx="6" ry="15" fill="#d4a574"/>
+  <ellipse cx="65" cy="95" rx="6" ry="15" fill="#d4a574"/>
+  <ellipse cx="80" cy="95" rx="6" ry="15" fill="#d4a574"/>
+  <!-- Level -->
+  <text x="60" y="115" text-anchor="middle" fill="#c41e3a" font-size="10" font-weight="bold">8级</text>
+  <text x="60" y="108" text-anchor="middle" fill="#ccc" font-size="9">朏朏</text>
+</svg>

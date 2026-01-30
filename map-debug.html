@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地图热区调试 - 南山区块</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Microsoft YaHei', sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      display: flex;
+      height: 100vh;
+    }
+    .sidebar {
+      width: 300px;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 20px;
+      border-right: 2px solid #8b4513;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .sidebar h1 {
+      color: #ffd700;
+      font-size: 16px;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #8b4513;
+    }
+    .sidebar h2 {
+      color: #cd853f;
+      font-size: 12px;
+      margin: 15px 0 8px;
+    }
+    .map-area {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0f0f1a;
+      overflow: hidden;
+    }
+    /* 关键：图片容器用于定位热区 */
+    #image-container {
+      position: relative;
+      display: inline-block;
+    }
+    #map-image {
+      display: block;
+      max-width: 95vw;
+      max-height: 95vh;
+      user-select: none;
+      pointer-events: none;
+    }
+    /* 热区圆圈 - 确保是正圆 */
+    .hotspot {
+      position: absolute;
+      border: 2px solid;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      cursor: move;
+      pointer-events: auto;
+      z-index: 10;
+    }
+    .hotspot.monster {
+      border-color: #ff6b6b;
+      background: rgba(255, 107, 107, 0.25);
+    }
+    .hotspot.resource {
+      border-color: #4ecdc4;
+      background: rgba(78, 205, 196, 0.25);
+    }
+    .hotspot.selected {
+      box-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
+      border-color: #ffd700 !important;
+    }
+    /* 名字标签 */
+    .hotspot-label {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: #fff;
+      white-space: nowrap;
+      text-shadow: 0 0 4px #000;
+      pointer-events: none;
+    }
+    /* 调整大小手柄 - 右下角 */
+    .resize-handle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #ffd700;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      cursor: nwse-resize;
+      right: -6px;
+      bottom: -6px;
+      z-index: 20;
+    }
+    .resize-handle:hover {
+      background: #fff;
+      transform: scale(1.2);
+    }
+    /* 左侧面板 - 选中热区编辑 */
+    .edit-panel {
+      background: rgba(139, 69, 19, 0.3);
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    .edit-panel.hidden { display: none; }
+    .form-group { margin-bottom: 10px; }
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 6px 8px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid #8b4513;
+      color: #e0e0e0;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #ffd700;
+    }
+    .form-row {
+      display: flex;
+      gap: 8px;
+    }
+    .form-row .form-group { flex: 1; }
+    .btn-group {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    .btn-group button { flex: 1; }
+    .hotspot-list {
+      list-style: none;
+    }
+    .hotspot-item {
+      background: rgba(139, 69, 19, 0.2);
+      padding: 8px 10px;
+      margin: 5px 0;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .hotspot-item:hover { background: rgba(139, 69, 19, 0.4); }
+    .hotspot-item.monster { border-left: 3px solid #ff6b6b; }
+    .hotspot-item.resource { border-left: 3px solid #4ecdc4; }
+    .hotspot-item.selected { background: rgba(212, 160, 23, 0.3); border-left-color: #ffd700; }
+    .hotspot-item .coords {
+      font-family: monospace;
+      font-size: 10px;
+      color: #4ecdc4;
+      margin-top: 4px;
+    }
+    .coord-display {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 100;
+    }
+    button {
+      background: #8b4513;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      margin: 5px 0;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      width: 100%;
+    }
+    button:hover { background: #a0522d; }
+    button.primary { background: #d4a017; color: #1a1a2e; }
+    button.primary:hover { background: #f0c040; }
+    button.danger { background: #c41e3a; }
+    button.danger:hover { background: #e74c3c; }
+    textarea {
+      width: 100%;
+      height: 120px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid #8b4513;
+      color: #4ecdc4;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .hint {
+      font-size: 11px;
+      color: #888;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h1>🗺️ 南山区块 - 热区调试</h1>
+    <div class="hint">
+      • 拖拽圆圈中心移动位置<br>
+      • 拖拽右下角金色小点调整大小<br>
+      • 点击列表项选中热区<br>
+      • 缩放浏览器测试定位
+    </div>
+
+    <!-- 选中热区编辑面板 -->
+    <div class="edit-panel" id="edit-panel">
+      <h2>✏️ 编辑选中热区</h2>
+      <div class="form-group">
+        <label>名称</label>
+        <input type="text" id="edit-name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>X位置 (%)</label>
+          <input type="number" id="edit-x" step="0.1" min="0" max="100">
+        </div>
+        <div class="form-group">
+          <label>Y位置 (%)</label>
+          <input type="number" id="edit-y" step="0.1" min="0" max="100">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>半径 (%) - 2~10</label>
+        <input type="number" id="edit-radius" step="0.5" min="2" max="10">
+      </div>
+      <div class="btn-group">
+        <button class="primary" id="btn-apply">应用</button>
+        <button id="btn-reset">重置</button>
+      </div>
+    </div>
+
+    <h2>👾 妖兽（5只）</h2>
+    <ul class="hotspot-list" id="monster-list"></ul>
+
+    <h2>🪨 采集物（3种）</h2>
+    <ul class="hotspot-list" id="resource-list"></ul>
+
+    <button class="primary" id="btn-export">📄 导出配置</button>
+    <button id="btn-copy">📋 复制到剪贴板</button>
+    <textarea id="output" readonly placeholder="点击导出生成配置..."></textarea>
+  </div>
+
+  <div class="map-area" id="map-area">
+    <div id="image-container">
+      <img id="map-image" src="assets/images/maps/fullmap.png" alt="大荒地图">
+    </div>
+  </div>
+
+  <div class="coord-display" id="coord-display">x: 0.00%, y: 0.00%</div>
+
+  <script>
+    // 南山区块数据 - 5妖兽 + 3采集物
+    const hotspots = [
+      { id: 'monster-10-1', name: '狌狌', level: 10, type: 'monster', x: 50, y: 50, r: 2.5 },
+      { id: 'monster-9-1', name: '鹿蜀', level: 9, type: 'monster', x: 55, y: 45, r: 2.5 },
+      { id: 'monster-9-2', name: '青兕', level: 9, type: 'monster', x: 60, y: 55, r: 2.5 },
+      { id: 'monster-9-3', name: '瞿如', level: 9, type: 'monster', x: 48, y: 60, r: 2.5 },
+      { id: 'monster-9-4', name: '蚩尤残魂', level: 9, type: 'monster', x: 65, y: 50, r: 2.5 },
+      { id: 'res-10-1', name: '山铁', level: 10, type: 'resource', x: 45, y: 58, r: 2 },
+      { id: 'res-9-1', name: '精铁', level: 9, type: 'resource', x: 52, y: 65, r: 2 },
+      { id: 'res-9-2', name: '桂木', level: 9, type: 'resource', x: 58, y: 48, r: 2 }
+    ];
+
+    const mapArea = document.getElementById('map-area');
+    const imageContainer = document.getElementById('image-container');
+    const mapImage = document.getElementById('map-image');
+    const coordDisplay = document.getElementById('coord-display');
+    const editPanel = document.getElementById('edit-panel');
+
+    let selectedId = null;
+    let dragging = null;
+    let resizing = null;
+
+    // 渲染热区
+    function render() {
+      // 清除旧热区
+      imageContainer.querySelectorAll('.hotspot').forEach(el => el.remove());
+
+      hotspots.forEach(h => {
+        const el = document.createElement('div');
+        el.className = `hotspot ${h.type}${h.id === selectedId ? ' selected' : ''}`;
+        el.dataset.id = h.id;
+        // 使用百分比定位，确保正圆 (width = height)
+        el.style.left = h.x + '%';
+        el.style.top = h.y + '%';
+        el.style.width = (h.r * 2) + '%';
+        el.style.height = (h.r * 2) + '%';
+
+        // 名字标签
+        const label = document.createElement('div');
+        label.className = 'hotspot-label';
+        label.textContent = h.name;
+        el.appendChild(label);
+
+        // 调整大小手柄
+        const handle = document.createElement('div');
+        handle.className = 'resize-handle';
+        handle.dataset.id = h.id;
+        el.appendChild(handle);
+
+        imageContainer.appendChild(el);
+      });
+
+      updateLists();
+      updateEditPanel();
+    }
+
+    // 更新列表
+    function updateLists() {
+      const monsters = hotspots.filter(h => h.type === 'monster');
+      const resources = hotspots.filter(h => h.type === 'resource');
+
+      document.getElementById('monster-list').innerHTML = monsters.map(h =>
+        `<li class="hotspot-item ${h.type}${h.id === selectedId ? ' selected' : ''}" data-id="${h.id}">
+          <strong>${h.name}</strong> (${h.level}级)
+          <div class="coords">x: ${h.x.toFixed(1)}%, y: ${h.y.toFixed(1)}%, r: ${h.r}%</div>
+        </li>`
+      ).join('');
+
+      document.getElementById('resource-list').innerHTML = resources.map(h =>
+        `<li class="hotspot-item ${h.type}${h.id === selectedId ? ' selected' : ''}" data-id="${h.id}">
+          <strong>${h.name}</strong> (${h.level}级)
+          <div class="coords">x: ${h.x.toFixed(1)}%, y: ${h.y.toFixed(1)}%, r: ${h.r}%</div>
+        </li>`
+      ).join('');
+
+      // 列表点击事件
+      document.querySelectorAll('.hotspot-item').forEach(item => {
+        item.addEventListener('click', () => {
+          selectHotspot(item.dataset.id);
+        });
+      });
+    }
+
+    // 更新编辑面板
+    function updateEditPanel() {
+      const h = hotspots.find(h => h.id === selectedId);
+      if (h) {
+        editPanel.classList.remove('hidden');
+        document.getElementById('edit-name').value = h.name;
+        document.getElementById('edit-x').value = h.x.toFixed(1);
+        document.getElementById('edit-y').value = h.y.toFixed(1);
+        document.getElementById('edit-radius').value = h.r;
+      } else {
+        editPanel.classList.add('hidden');
+      }
+    }
+
+    // 选中热区
+    function selectHotspot(id) {
+      selectedId = id;
+      render();
+    }
+
+    // 获取相对于图片的坐标
+    function getImageCoords(e) {
+      const rect = mapImage.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      return {
+        x: Math.max(0, Math.min(100, x)),
+        y: Math.max(0, Math.min(100, y))
+      };
+    }
+
+    // 鼠标按下 - 开始拖拽或调整大小
+    imageContainer.addEventListener('mousedown', e => {
+      const handle = e.target.closest('.resize-handle');
+      const hotspot = e.target.closest('.hotspot');
+
+      if (handle) {
+        resizing = handle.dataset.id;
+        selectHotspot(resizing);
+        e.preventDefault();
+        e.stopPropagation();
+      } else if (hotspot) {
+        dragging = hotspot.dataset.id;
+        selectHotspot(dragging);
+        e.preventDefault();
+      }
+    });
+
+    // 鼠标移动
+    document.addEventListener('mousemove', e => {
+      const coords = getImageCoords(e);
+      coordDisplay.textContent = `x: ${coords.x.toFixed(2)}%, y: ${coords.y.toFixed(2)}%`;
+
+      if (dragging) {
+        const h = hotspots.find(h => h.id === dragging);
+        if (h) {
+          h.x = coords.x;
+          h.y = coords.y;
+          render();
+        }
+      }
+
+      if (resizing) {
+        const h = hotspots.find(h => h.id === resizing);
+        if (h) {
+          // 计算新半径 (距离圆心的距离)
+          const dx = coords.x - h.x;
+          const dy = coords.y - h.y;
+          h.r = Math.max(1.5, Math.min(10, Math.sqrt(dx * dx + dy * dy)));
+          render();
+        }
+      }
+    });
+
+    // 鼠标松开
+    document.addEventListener('mouseup', () => {
+      dragging = null;
+      resizing = null;
+    });
+
+    // 编辑面板事件
+    document.getElementById('btn-apply').addEventListener('click', () => {
+      const h = hotspots.find(h => h.id === selectedId);
+      if (h) {
+        h.name = document.getElementById('edit-name').value || h.name;
+        h.x = parseFloat(document.getElementById('edit-x').value) || h.x;
+        h.y = parseFloat(document.getElementById('edit-y').value) || h.y;
+        h.r = parseFloat(document.getElementById('edit-radius').value) || h.r;
+        render();
+      }
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      updateEditPanel();
+    });
+
+    // 导出配置
+    document.getElementById('btn-export').addEventListener('click', () => {
+      const config = {
+        version: "1.0.0",
+        monsters: hotspots.filter(h => h.type === 'monster').map(h => ({
+          id: h.id,
+          name: h.name,
+          level: h.level,
+          position: { x: Math.round(h.x * 10) / 10, y: Math.round(h.y * 10) / 10 },
+          hitboxRadius: Math.round(h.r * 10) / 10
+        })),
+        resources: hotspots.filter(h => h.type === 'resource').map(h => ({
+          id: h.id,
+          name: h.name,
+          materialId: h.id.replace('res', 'mat'),
+          position: { x: Math.round(h.x * 10) / 10, y: Math.round(h.y * 10) / 10 },
+          hitboxRadius: Math.round(h.r * 10) / 10
+        }))
+      };
+      document.getElementById('output').value = JSON.stringify(config, null, 2);
+    });
+
+    // 复制
+    document.getElementById('btn-copy').addEventListener('click', () => {
+      const output = document.getElementById('output');
+      if (!output.value) { alert('请先导出配置！'); return; }
+      output.select();
+      document.execCommand('copy');
+      alert('已复制到剪贴板！');
+    });
+
+    // 初始化
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地图坐标探测器 - 大荒斩妖录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid #8b4513;
+        }
+
+        .sidebar h1 {
+            color: #ffd700;
+            font-size: 20px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #8b4513;
+            padding-bottom: 10px;
+        }
+
+        .sidebar h2 {
+            color: #cd853f;
+            font-size: 14px;
+            margin: 15px 0 10px;
+        }
+
+        .map-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #0f0f1a;
+        }
+
+        #map-image {
+            max-width: 100%;
+            max-height: 100vh;
+            cursor: crosshair;
+            display: block;
+        }
+
+        .click-marker {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ff6b6b;
+            border-radius: 50%;
+            background: rgba(255, 107, 107, 0.3);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: markerPulse 1s ease-out;
+        }
+
+        @keyframes markerPulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+
+        .current-coords {
+            background: rgba(139, 69, 19, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-family: monospace;
+        }
+
+        .current-coords div {
+            margin: 5px 0;
+        }
+
+        .coord-value {
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+
+        .hotspot-list {
+            list-style: none;
+        }
+
+        .hotspot-item {
+            background: rgba(139, 69, 19, 0.2);
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border-left: 3px solid #8b4513;
+        }
+
+        .hotspot-item .type {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .hotspot-item .name {
+            font-weight: bold;
+            color: #ffd700;
+            margin: 3px 0;
+        }
+
+        .hotspot-item .coords {
+            font-family: monospace;
+            font-size: 12px;
+            color: #4ecdc4;
+        }
+
+        .hotspot-item .actions {
+            margin-top: 8px;
+        }
+
+        button {
+            background: #8b4513;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        button:hover {
+            background: #a0522d;
+        }
+
+        button.copy-btn {
+            background: #2e7d32;
+        }
+
+        button.copy-btn:hover {
+            background: #388e3c;
+        }
+
+        .add-form {
+            background: rgba(139, 69, 19, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .add-form input, .add-form select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #8b4513;
+            color: #e0e0e0;
+            border-radius: 3px;
+        }
+
+        .add-form button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+        }
+
+        .export-area {
+            margin-top: 15px;
+        }
+
+        .export-area textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #8b4513;
+            color: #4ecdc4;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 11px;
+            border-radius: 5px;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 215, 0, 0.4);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: rippleEffect 0.6s ease-out forwards;
+        }
+
+        @keyframes rippleEffect {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                width: 100px;
+                height: 100px;
+                opacity: 0;
+            }
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-toggle button {
+            flex: 1;
+            padding: 10px;
+        }
+
+        .mode-toggle button.active {
+            background: #ffd700;
+            color: #1a1a2e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>🗺️ 地图坐标探测器</h1>
+
+            <h2>📍 当前坐标</h2>
+            <div class="current-coords">
+                <div>X: <span class="coord-value" id="coord-x">--</span>%</div>
+                <div>Y: <span class="coord-value" id="coord-y">--</span>%</div>
+                <div>点击次数: <span class="coord-value" id="click-count">0</span></div>
+            </div>
+
+            <h2>🎯 模式</h2>
+            <div class="mode-toggle">
+                <button id="mode-detect" class="active">探测模式</button>
+                <button id="mode-preview">预览模式</button>
+            </div>
+
+            <h2>➕ 添加热区</h2>
+            <div class="add-form">
+                <select id="hotspot-type">
+                    <option value="monster">怪兽</option>
+                    <option value="resource">采集物</option>
+                    <option value="landmark">地标</option>
+                </select>
+                <input type="text" id="hotspot-name" placeholder="名称 (如: 狌狌)">
+                <input type="text" id="hotspot-level" placeholder="等级 (如: 10)">
+                <input type="number" id="hotspot-radius" placeholder="热区半径" value="5" min="2" max="15">
+                <button id="add-hotspot">📌 添加当前坐标为热区</button>
+            </div>
+
+            <h2>📋 热区列表 (<span id="hotspot-count">0</span>)</h2>
+            <ul class="hotspot-list" id="hotspot-list"></ul>
+
+            <div class="export-area">
+                <button id="export-json" class="copy-btn">📄 生成 JSON 配置</button>
+                <textarea id="json-output" readonly placeholder="点击上方按钮生成配置..."></textarea>
+                <button id="copy-json" class="copy-btn">📋 复制到剪贴板</button>
+            </div>
+        </div>
+
+        <div class="map-area" id="map-area">
+            <img id="map-image" src="assets/images/maps/fullmap.png" alt="大荒地图">
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentX = 0;
+        let currentY = 0;
+        let clickCount = 0;
+        let isPreviewMode = false;
+        let hotspots = [
+            // 预设数据（可根据 fullmap.png 调整）
+            { id: 'monster-10-1', type: 'monster', name: '狌狌', level: 10, x: 25, y: 60, radius: 5 },
+            { id: 'monster-9-1', type: 'monster', name: '鹿蜀', level: 9, x: 35, y: 55, radius: 5 },
+            { id: 'monster-9-2', type: 'monster', name: '青兕', level: 9, x: 40, y: 65, radius: 5 },
+            { id: 'monster-8-1', type: 'monster', name: '朏朏', level: 8, x: 50, y: 45, radius: 5 },
+            { id: 'monster-8-2', type: 'monster', name: '蠪蚳', level: 8, x: 55, y: 35, radius: 5 },
+            { id: 'res-mountain-iron', type: 'resource', name: '山铁', level: null, x: 20, y: 45, radius: 4 },
+            { id: 'res-refined-iron', type: 'resource', name: '精铁', level: null, x: 30, y: 40, radius: 4 },
+            { id: 'res-linxiseed', type: 'resource', name: '灵犀藤', level: null, x: 48, y: 55, radius: 4 },
+            { id: 'res-red-copper', type: 'resource', name: '赤铜矿石', level: null, x: 60, y: 50, radius: 4 },
+        ];
+
+        // DOM Elements
+        const mapImage = document.getElementById('map-image');
+        const mapArea = document.getElementById('map-area');
+        const coordX = document.getElementById('coord-x');
+        const coordY = document.getElementById('coord-y');
+        const clickCountEl = document.getElementById('click-count');
+        const hotspotList = document.getElementById('hotspot-list');
+        const hotspotCount = document.getElementById('hotspot-count');
+        const jsonOutput = document.getElementById('json-output');
+
+        // Calculate percentage coordinates
+        function getPercentageCoords(event, element) {
+            const rect = element.getBoundingClientRect();
+            const x = ((event.clientX - rect.left) / rect.width) * 100;
+            const y = ((event.clientY - rect.top) / rect.height) * 100;
+            return { x: x.toFixed(2), y: y.toFixed(2) };
+        }
+
+        // Create ripple effect
+        function createRipple(x, y) {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = x + '%';
+            ripple.style.top = y + '%';
+            mapArea.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+        }
+
+        // Create marker
+        function createMarker(x, y) {
+            const marker = document.createElement('div');
+            marker.className = 'click-marker';
+            marker.style.left = x + '%';
+            marker.style.top = y + '%';
+            mapArea.appendChild(marker);
+            setTimeout(() => marker.remove(), 1000);
+        }
+
+        // Update coordinates display
+        function updateCoords(x, y) {
+            currentX = x;
+            currentY = y;
+            coordX.textContent = x;
+            coordY.textContent = y;
+        }
+
+        // Render hotspot list
+        function renderHotspotList() {
+            hotspotList.innerHTML = '';
+            hotspotCount.textContent = hotspots.length;
+
+            hotspots.forEach((spot, index) => {
+                const li = document.createElement('li');
+                li.className = 'hotspot-item';
+                li.innerHTML = `
+                    <div class="type">${getTypeName(spot.type)}${spot.level ? ` · ${spot.level}级` : ''}</div>
+                    <div class="name">${spot.name}</div>
+                    <div class="coords">x: ${spot.x}%, y: ${spot.y}%, r: ${spot.radius}%</div>
+                    <div class="actions">
+                        <button onclick="goToHotspot(${index})">📍 定位</button>
+                        <button onclick="deleteHotspot(${index})">🗑️ 删除</button>
+                    </div>
+                `;
+                hotspotList.appendChild(li);
+            });
+
+            // Update preview
+            if (isPreviewMode) {
+                renderPreview();
+            }
+        }
+
+        function getTypeName(type) {
+            const names = { monster: '👾 怪兽', resource: '🪨 采集物', landmark: '🏛️ 地标' };
+            return names[type] || type;
+        }
+
+        // Render preview circles on map
+        function renderPreview() {
+            // Remove old preview circles
+            document.querySelectorAll('.preview-circle').forEach(el => el.remove());
+
+            if (!isPreviewMode) return;
+
+            hotspots.forEach(spot => {
+                const circle = document.createElement('div');
+                circle.className = 'preview-circle';
+                const color = spot.type === 'monster' ? '#ff6b6b' : spot.type === 'resource' ? '#4ecdc4' : '#ffd700';
+                circle.style.cssText = `
+                    position: absolute;
+                    left: ${spot.x}%;
+                    top: ${spot.y}%;
+                    width: ${spot.radius * 2}%;
+                    height: ${spot.radius * 2}%;
+                    border: 2px solid ${color};
+                    border-radius: 50%;
+                    background: ${color}33;
+                    transform: translate(-50%, -50%);
+                    pointer-events: none;
+                `;
+                circle.title = `${spot.name} (${spot.x}%, ${spot.y}%)`;
+                mapArea.appendChild(circle);
+            });
+        }
+
+        // Go to hotspot
+        window.goToHotspot = function(index) {
+            const spot = hotspots[index];
+            createRipple(spot.x, spot.y);
+            createMarker(spot.x, spot.y);
+        };
+
+        // Delete hotspot
+        window.deleteHotspot = function(index) {
+            hotspots.splice(index, 1);
+            renderHotspotList();
+        };
+
+        // Add hotspot
+        document.getElementById('add-hotspot').addEventListener('click', () => {
+            const type = document.getElementById('hotspot-type').value;
+            const name = document.getElementById('hotspot-name').value.trim();
+            const level = document.getElementById('hotspot-level').value.trim();
+            const radius = parseFloat(document.getElementById('hotspot-radius').value) || 5;
+
+            if (!name) {
+                alert('请输入名称');
+                return;
+            }
+
+            const id = `${type}-${Date.now()}`;
+            hotspots.push({
+                id,
+                type,
+                name,
+                level: level ? parseInt(level) : null,
+                x: parseFloat(currentX),
+                y: parseFloat(currentY),
+                radius
+            });
+
+            // Clear form
+            document.getElementById('hotspot-name').value = '';
+            document.getElementById('hotspot-level').value = '';
+
+            renderHotspotList();
+            createMarker(currentX, currentY);
+        });
+
+        // Export JSON
+        document.getElementById('export-json').addEventListener('click', () => {
+            const config = {
+                version: '1.0.0',
+                map: 'fullmap.png',
+                monsters: hotspots.filter(h => h.type === 'monster').map(h => ({
+                    id: h.id,
+                    name: h.name,
+                    level: h.level,
+                    position: { x: h.x, y: h.y },
+                    hitboxRadius: h.radius
+                })),
+                resources: hotspots.filter(h => h.type === 'resource').map(h => ({
+                    id: h.id,
+                    name: h.name,
+                    position: { x: h.x, y: h.y },
+                    hitboxRadius: h.radius
+                })),
+                landmarks: hotspots.filter(h => h.type === 'landmark').map(h => ({
+                    id: h.id,
+                    name: h.name,
+                    position: { x: h.x, y: h.y },
+                    hitboxRadius: h.radius
+                }))
+            };
+            jsonOutput.value = JSON.stringify(config, null, 2);
+        });
+
+        // Copy JSON
+        document.getElementById('copy-json').addEventListener('click', () => {
+            jsonOutput.select();
+            document.execCommand('copy');
+            alert('已复制到剪贴板！');
+        });
+
+        // Mode toggle
+        document.getElementById('mode-detect').addEventListener('click', () => {
+            isPreviewMode = false;
+            document.getElementById('mode-detect').classList.add('active');
+            document.getElementById('mode-preview').classList.remove('active');
+            document.querySelectorAll('.preview-circle').forEach(el => el.remove());
+        });
+
+        document.getElementById('mode-preview').addEventListener('click', () => {
+            isPreviewMode = true;
+            document.getElementById('mode-preview').classList.add('active');
+            document.getElementById('mode-detect').classList.remove('active');
+            renderPreview();
+        });
+
+        // Map click handler
+        mapImage.addEventListener('click', (e) => {
+            const coords = getPercentageCoords(e, mapImage);
+            updateCoords(coords.x, coords.y);
+            clickCount++;
+            clickCountEl.textContent = clickCount;
+            createRipple(coords.x, coords.y);
+            createMarker(coords.x, coords.y);
+        });
+
+        // Map move handler (preview coordinates on hover)
+        mapImage.addEventListener('mousemove', (e) => {
+            const coords = getPercentageCoords(e, mapImage);
+            coordX.textContent = coords.x;
+            coordY.textContent = coords.y;
+        });
+
+        // Initialize
+        renderHotspotList();
+    </script>
+</body>
+</html>

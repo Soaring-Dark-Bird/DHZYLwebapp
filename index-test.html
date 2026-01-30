@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大荒斩妖录 - 测试</title>
+  <style>
+    body {
+      font-family: 'Microsoft YaHei', sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      margin: 0;
+      padding: 20px;
+    }
+    #log {
+      background: #1a1a2e;
+      border: 1px solid #c41e3a;
+      padding: 15px;
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .log-entry { margin: 5px 0; }
+    .success { color: #4a9c5a; }
+    .error { color: #c41e3a; }
+    .info { color: #4a9cbc; }
+    button {
+      background: #c41e3a;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
+    }
+    button:hover { background: #a01830; }
+    #test-frame {
+      border: 2px solid #3a3a4a;
+      border-radius: 8px;
+      width: 100%;
+      height: 500px;
+      background: #0a0a0f;
+    }
+  </style>
+</head>
+<body>
+  <h1>大荒斩妖录 - 浏览器测试工具</h1>
+
+  <div>
+    <button onclick="testResources()">测试资源</button>
+    <button onclick="testModules()">测试模块</button>
+    <button onclick="openGame()">打开游戏</button>
+    <button onclick="clearLog()">清除日志</button>
+  </div>
+
+  <div id="log"></div>
+
+  <iframe id="test-frame"></iframe>
+
+  <script>
+    const logEl = document.getElementById('log');
+    const frame = document.getElementById('test-frame');
+
+    function log(msg, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      logEl.innerHTML += `<div class="log-entry ${type}">[${time}] ${msg}</div>`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function clearLog() {
+      logEl.innerHTML = '';
+    }
+
+    async function testResources() {
+      clearLog();
+      log('开始测试资源...', 'info');
+
+      const resources = [
+        '/styles/themes.css',
+        '/styles/main.css',
+        '/styles/animations.css',
+        '/src/main.js',
+        '/src/core/GameState.js',
+        '/assets/data/blades.json',
+        '/assets/data/monsters.json',
+        '/assets/data/materials.json'
+      ];
+
+      let passed = 0, failed = 0;
+
+      for (const res of resources) {
+        try {
+          const resp = await fetch('http://localhost:3000' + res);
+          if (resp.ok) {
+            log(`✓ ${res} (${resp.status})`, 'success');
+            passed++;
+          } else {
+            log(`✗ ${res} (${resp.status})`, 'error');
+            failed++;
+          }
+        } catch (e) {
+          log(`✗ ${res}: ${e.message}`, 'error');
+          failed++;
+        }
+      }
+
+      log(`\n结果: ${passed} 通过, ${failed} 失败`, failed === 0 ? 'success' : 'error');
+    }
+
+    async function testModules() {
+      clearLog();
+      log('开始测试模块加载...', 'info');
+
+      const modules = [
+        { path: '/src/core/GameState.js', exports: ['getState', 'getCurrentBlade'] },
+        { path: '/src/ui/IntroScreen.js', exports: ['IntroScreen'] },
+        { path: '/src/ui/MapView.js', exports: ['MapView'] },
+        { path: '/src/ui/BattleView.js', exports: ['BattleView'] }
+      ];
+
+      for (const mod of modules) {
+        try {
+          // Create a blob URL to test the module
+          const resp = await fetch('http://localhost:3000' + mod.path);
+          const code = await resp.text();
+
+          const hasExports = mod.exports.every(exp => code.includes(`export ${exp}`) || code.includes(`export class ${exp}`));
+
+          if (hasExports) {
+            log(`✓ ${mod.path} - 包含所有导出`, 'success');
+          } else {
+            log(`? ${mod.path} - 可能缺少某些导出`, 'info');
+          }
+        } catch (e) {
+          log(`✗ ${mod.path}: ${e.message}`, 'error');
+        }
+      }
+
+      log('\n模块语法测试完成', 'info');
+    }
+
+    function openGame() {
+      clearLog();
+      log('正在加载游戏...', 'info');
+      frame.src = 'http://localhost:3000';
+      log('游戏已加载到下方框架', 'success');
+      log('如果看不到游戏，请检查浏览器控制台 (F12) 的错误信息', 'info');
+    }
+
+    // Capture errors from the iframe
+    window.addEventListener('message', (e) => {
+      if (e.data.error) {
+        log(`框架错误: ${e.data.error}`, 'error');
+      }
+    });
+
+    // Initial test
+    log('测试工具已就绪。点击按钮开始测试。', 'success');
+    log('建议: 先点击"测试资源"，然后点击"打开游戏"', 'info');
+  </script>
+</body>
+</html>

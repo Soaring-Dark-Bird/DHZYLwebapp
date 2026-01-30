@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Debug Test</title>
+</head>
+<body>
+  <h1>Running Tests...</h1>
+  <div id="results"></div>
+  <iframe src="http://localhost:3000" style="width:100%;height:80vh;border:1px solid #ccc;"></iframe>
+
+  <script>
+    const results = document.getElementById('results');
+
+    async function testEndpoint(url) {
+      try {
+        const resp = await fetch(url);
+        return { status: resp.status, ok: resp.ok };
+      } catch (e) {
+        return { error: e.message };
+      }
+    }
+
+    async function runTests() {
+      let html = '<h2>Server Tests:</h2>';
+
+      const tests = [
+        'http://localhost:3000/',
+        'http://localhost:3000/src/main.js',
+        'http://localhost:3000/styles/main.css',
+        'http://localhost:3000/assets/data/monsters.json',
+        'http://localhost:3000/assets/data/blades.json'
+      ];
+
+      for (const url of tests) {
+        const result = await testEndpoint(url);
+        if (result.error) {
+          html += `<p style="color:red">✗ ${url}: ${result.error}</p>`;
+        } else if (result.ok) {
+          html += `<p style="color:green">✓ ${url}: ${result.status}</p>`;
+        } else {
+          html += `<p style="color:orange">? ${url}: ${result.status}</p>`;
+        }
+      }
+
+      results.innerHTML = html;
+    }
+
+    runTests();
+
+    // Listen for errors from the iframe
+    window.addEventListener('message', (e) => {
+      if (e.data.type === 'error') {
+        results.innerHTML += `<p style="color:red">JS Error: ${e.data.message}</p>`;
+      }
+    });
+  </script>
+
+  <script>
+    // Inject error capture into the iframe after it loads
+    const iframe = document.querySelector('iframe');
+    iframe.onload = () => {
+      try {
+        const doc = iframe.contentWindow.document;
+        const script = doc.createElement('script');
+        script.textContent = `
+          window.addEventListener('error', (e) => {
+            parent.postMessage({ type: 'error', message: e.message + ' at ' + e.filename + ':' + e.lineno }, '*');
+          });
+          window.addEventListener('unhandledrejection', (e) => {
+            parent.postMessage({ type: 'error', message: 'Promise rejected: ' + e.reason }, '*');
+          });
+        `;
+        doc.head.appendChild(script);
+      } catch (e) {
+        results.innerHTML += `<p style="color:orange">Cannot access iframe (CORS): ${e.message}</p>`;
+      }
+    };
+  </script>
+</body>
+</html>

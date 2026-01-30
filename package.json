@@ -1,0 +1,20 @@
+{
+  "name": "dahuang-zanyaolu",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "大荒斩妖录 - A clicker browser game based on Shan Hai Jing",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
+  },
+  "devDependencies": {
+    "@vitest/ui": "^2.1.8",
+    "jsdom": "^25.0.1",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地图编辑器 - 大荒斩妖录</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Microsoft YaHei', sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* 左侧编辑面板 */
+    .editor-panel {
+      width: 320px;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 20px;
+      overflow-y: auto;
+      border-right: 2px solid #8b4513;
+    }
+
+    .editor-panel h1 {
+      color: #ffd700;
+      font-size: 18px;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #8b4513;
+      padding-bottom: 10px;
+    }
+
+    .editor-panel h2 {
+      color: #cd853f;
+      font-size: 14px;
+      margin: 15px 0 10px;
+    }
+
+    /* 右侧地图区域 */
+    .map-area {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #0f0f1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #map-image {
+      max-width: 95%;
+      max-height: 95vh;
+      cursor: crosshair;
+      user-select: none;
+    }
+
+    /* 热区元素 */
+    .hotspot {
+      position: absolute;
+      border: 2px solid #ff6b6b;
+      border-radius: 50%;
+      background: rgba(255, 107, 107, 0.2);
+      transform: translate(-50%, -50%);
+      cursor: move;
+      pointer-events: auto;
+    }
+
+    .hotspot.selected {
+      border-color: #ffd700;
+      box-shadow: 0 0 10px #ffd700;
+    }
+
+    .hotspot.monster { border-color: #ff6b6b; background: rgba(255, 107, 107, 0.2); }
+    .hotspot.resource { border-color: #4ecdc4; background: rgba(78, 205, 196, 0.2); }
+    .hotspot.region { border-color: #ffd700; background: rgba(255, 215, 0, 0.15); }
+
+    .hotspot-label {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 4px;
+      font-size: 11px;
+      color: #fff;
+      white-space: nowrap;
+      text-shadow: 0 0 3px #000;
+      pointer-events: none;
+    }
+
+    /* 调整大小手柄 */
+    .resize-handle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #ffd700;
+      border: 1px solid #fff;
+      border-radius: 50%;
+      cursor: se-resize;
+      right: -5px;
+      bottom: -5px;
+    }
+
+    /* 坐标显示 */
+    .coord-display {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 14px;
+      z-index: 100;
+    }
+
+    /* 表单样式 */
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid #8b4513;
+      color: #e0e0e0;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #ffd700;
+    }
+
+    /* 按钮 */
+    button {
+      background: #8b4513;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      margin: 4px 2px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #a0522d;
+    }
+
+    button.primary {
+      background: #d4a017;
+      color: #1a1a2e;
+      font-weight: bold;
+    }
+
+    button.primary:hover {
+      background: #f0c040;
+    }
+
+    button.danger {
+      background: #c41e3a;
+    }
+
+    button.danger:hover {
+      background: #e74c3c;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .btn-group button {
+      flex: 1;
+    }
+
+    /* 热区列表 */
+    .hotspot-list {
+      list-style: none;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .hotspot-item {
+      background: rgba(139, 69, 19, 0.2);
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 5px;
+      border-left: 3px solid #8b4513;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .hotspot-item:hover {
+      background: rgba(139, 69, 19, 0.4);
+    }
+
+    .hotspot-item.selected {
+      background: rgba(212, 160, 23, 0.3);
+      border-left-color: #ffd700;
+    }
+
+    .hotspot-item .type-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-right: 5px;
+    }
+
+    .hotspot-item .type-badge.monster { background: #ff6b6b; }
+    .hotspot-item .type-badge.resource { background: #4ecdc4; }
+    .hotspot-item .type-badge.region { background: #ffd700; color: #1a1a2e; }
+
+    .hotspot-item .coords {
+      font-family: monospace;
+      font-size: 11px;
+      color: #4ecdc4;
+      margin-top: 4px;
+    }
+
+    /* 输出区域 */
+    .output-area {
+      margin-top: 15px;
+    }
+
+    .output-area textarea {
+      width: 100%;
+      height: 150px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid #8b4513;
+      color: #4ecdc4;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 11px;
+      border-radius: 5px;
+      resize: vertical;
+    }
+
+    /* 工具栏 */
+    .toolbar {
+      display: flex;
+      gap: 5px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(139, 69, 19, 0.3);
+      margin-bottom: 15px;
+    }
+
+    .toolbar button {
+      flex: 1;
+      padding: 10px;
+    }
+
+    .toolbar button.active {
+      background: #ffd700;
+      color: #1a1a2e;
+    }
+
+    /* 点击涟漪 */
+    .click-ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 215, 0, 0.4);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: rippleEffect 0.5s ease-out forwards;
+    }
+
+    @keyframes rippleEffect {
+      0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+      }
+      100% {
+        width: 50px;
+        height: 50px;
+        opacity: 0;
+      }
+    }
+
+    /* 提示 */
+    .hint {
+      font-size: 11px;
+      color: #888;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 3px;
+      margin-bottom: 15px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 左侧编辑面板 -->
+    <div class="editor-panel">
+      <h1>🗺️ 地图编辑器</h1>
+
+      <div class="toolbar">
+        <button id="tool-select" class="active">🖱️ 选择</button>
+        <button id="tool-create">➕ 创建</button>
+      </div>
+
+      <div class="hint" id="hint-text">
+        点击"创建"模式，然后在地图上点击添加热区
+      </div>
+
+      <!-- 当前选中热区编辑 -->
+      <div id="edit-panel" style="display: none;">
+        <h2>📝 编辑热区</h2>
+
+        <div class="form-group">
+          <label>名称</label>
+          <input type="text" id="edit-name" placeholder="如: 狌狌">
+        </div>
+
+        <div class="form-group">
+          <label>类型</label>
+          <select id="edit-type">
+            <option value="monster">👾 怪兽</option>
+            <option value="resource">🪨 采集物</option>
+            <option value="region">🏛️ 区域</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>等级 (怪兽专用)</label>
+          <input type="number" id="edit-level" value="10" min="8" max="10">
+        </div>
+
+        <div class="form-group">
+          <label>关联ID (如: monster-10-1)</label>
+          <input type="text" id="edit-id" placeholder="自动生成">
+        </div>
+
+        <div class="form-group">
+          <label>热区半径 (%)</label>
+          <input type="number" id="edit-radius" value="5" min="2" max="20" step="0.5">
+        </div>
+
+        <div class="btn-group">
+          <button class="primary" id="btn-save">💾 保存</button>
+          <button class="danger" id="btn-delete">🗑️ 删除</button>
+        </div>
+      </div>
+
+      <!-- 热区列表 -->
+      <h2>📋 热区列表 (<span id="hotspot-count">0</span>)</h2>
+      <ul class="hotspot-list" id="hotspot-list"></ul>
+
+      <!-- 导出 -->
+      <div class="output-area">
+        <button class="primary" id="btn-export" style="width: 100%;">📄 生成配置文件</button>
+        <textarea id="output-json" readonly placeholder="点击上方按钮生成配置..."></textarea>
+        <button id="btn-copy" style="width: 100%;">📋 复制到剪贴板</button>
+      </div>
+    </div>
+
+    <!-- 右侧地图区域 -->
+    <div class="map-area" id="map-area">
+      <img id="map-image" src="assets/images/maps/fullmap.png" alt="大荒地图">
+    </div>
+  </div>
+
+  <!-- 坐标显示 -->
+  <div class="coord-display" id="coord-display">x: 0.00%, y: 0.00%</div>
+
+  <script>
+    // 状态
+    const state = {
+      hotspots: [],
+      selectedId: null,
+      tool: 'select', // 'select' or 'create'
+      dragging: null,
+      resizing: null,
+      nextId: 1
+    };
+
+    // DOM 元素
+    const mapArea = document.getElementById('map-area');
+    const mapImage = document.getElementById('map-image');
+    const coordDisplay = document.getElementById('coord-display');
+    const hotspotList = document.getElementById('hotspot-list');
+    const editPanel = document.getElementById('edit-panel');
+    const hintText = document.getElementById('hint-text');
+
+    // 类型映射
+    const typeLabels = {
+      monster: '👾 怪兽',
+      resource: '🪨 采集物',
+      region: '🏛️ 区域'
+    };
+
+    // 默认数据 - 南山区块: 4种怪兽 + 3种采集物
+    const defaultHotspots = [
+      // 10级怪兽
+      { id: 'monster-10-1', name: '狌狌', type: 'monster', level: 10, x: 50, y: 50, radius: 4 },
+      // 9级怪兽 (3种)
+      { id: 'monster-9-1', name: '鹿蜀', type: 'monster', level: 9, x: 55, y: 45, radius: 4 },
+      { id: 'monster-9-2', name: '青兕', type: 'monster', level: 9, x: 60, y: 55, radius: 4 },
+      { id: 'monster-9-3', name: '类', type: 'monster', level: 9, x: 45, y: 60, radius: 4 },
+      // 采集物 (3种)
+      { id: 'res-south-1', name: '山铁', type: 'resource', x: 48, y: 58, radius: 3 },
+      { id: 'res-south-2', name: '真火晶', type: 'resource', x: 58, y: 48, radius: 3 },
+      { id: 'res-south-3', name: '桂木', type: 'resource', x: 52, y: 62, radius: 3 },
+      // 南山区块区域
+      { id: 'region-south', name: '南山区块', type: 'region', x: 52, y: 52, radius: 12 }
+    ];
+
+    // 初始化
+    function init() {
+      state.hotspots = [...defaultHotspots];
+      renderHotspots();
+      renderList();
+      setupEvents();
+    }
+
+    // 渲染热区
+    function renderHotspots() {
+      // 移除旧的热区元素
+      document.querySelectorAll('.hotspot').forEach(el => el.remove());
+
+      state.hotspots.forEach(h => {
+        const el = document.createElement('div');
+        el.className = `hotspot ${h.type}${h.id === state.selectedId ? ' selected' : ''}`;
+        el.dataset.id = h.id;
+        el.style.cssText = `
+          left: ${h.x}%;
+          top: ${h.y}%;
+          width: ${h.radius * 2}%;
+          height: ${h.radius * 2}%;
+        `;
+
+        // 标签
+        const label = document.createElement('div');
+        label.className = 'hotspot-label';
+        label.textContent = h.name;
+        el.appendChild(label);
+
+        // 调整大小手柄
+        const handle = document.createElement('div');
+        handle.className = 'resize-handle';
+        handle.dataset.id = h.id;
+        el.appendChild(handle);
+
+        mapArea.appendChild(el);
+      });
+    }
+
+    // 渲染列表
+    function renderList() {
+      document.getElementById('hotspot-count').textContent = state.hotspots.length;
+
+      if (state.hotspots.length === 0) {
+        hotspotList.innerHTML = '<li class="empty-state">暂无热区，点击"创建"模式添加</li>';
+        return;
+      }
+
+      hotspotList.innerHTML = state.hotspots.map(h => `
+        <li class="hotspot-item${h.id === state.selectedId ? ' selected' : ''}" data-id="${h.id}">
+          <span class="type-badge ${h.type}">${typeLabels[h.type]}</span>
+          <strong>${h.name}</strong>
+          ${h.level ? `<span style="font-size:11px;color:#888;">(${h.level}级)</span>` : ''}
+          <div class="coords">x: ${h.x.toFixed(1)}%, y: ${h.y.toFixed(1)}%, r: ${h.radius}%</div>
+        </li>
+      `).join('');
+    }
+
+    // 设置事件监听
+    function setupEvents() {
+      // 工具切换
+      document.getElementById('tool-select').addEventListener('click', () => setTool('select'));
+      document.getElementById('tool-create').addEventListener('click', () => setTool('create'));
+
+      // 地图点击
+      mapArea.addEventListener('click', handleMapClick);
+      mapArea.addEventListener('mousedown', handleMouseDown);
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+
+      // 列表点击
+      hotspotList.addEventListener('click', (e) => {
+        const item = e.target.closest('.hotspot-item');
+        if (item) {
+          selectHotspot(item.dataset.id);
+        }
+      });
+
+      // 编辑面板
+      document.getElementById('btn-save').addEventListener('click', saveEdit);
+      document.getElementById('btn-delete').addEventListener('click', deleteHotspot);
+
+      // 导出
+      document.getElementById('btn-export').addEventListener('click', exportConfig);
+      document.getElementById('btn-copy').addEventListener('click', copyToClipboard);
+
+      // 鼠标移动显示坐标
+      mapArea.addEventListener('mousemove', (e) => {
+        const rect = mapImage.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        coordDisplay.textContent = `x: ${x.toFixed(2)}%, y: ${y.toFixed(2)}%`;
+      });
+    }
+
+    // 设置工具
+    function setTool(tool) {
+      state.tool = tool;
+      document.getElementById('tool-select').classList.toggle('active', tool === 'select');
+      document.getElementById('tool-create').classList.toggle('active', tool === 'create');
+
+      if (tool === 'create') {
+        hintText.textContent = '点击地图任意位置创建新热区';
+        mapImage.style.cursor = 'crosshair';
+      } else {
+        hintText.textContent = '拖拽热区移动，拖拽右下角调整大小';
+        mapImage.style.cursor = 'default';
+      }
+    }
+
+    // 处理地图点击
+    function handleMapClick(e) {
+      if (state.tool !== 'create') return;
+      if (e.target.closest('.hotspot')) return;
+
+      const rect = mapImage.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+      createHotspot(x, y);
+    }
+
+    // 处理鼠标按下
+    function handleMouseDown(e) {
+      const hotspot = e.target.closest('.hotspot');
+      const handle = e.target.closest('.resize-handle');
+
+      if (handle) {
+        state.resizing = handle.dataset.id;
+        e.preventDefault();
+      } else if (hotspot && state.tool === 'select') {
+        state.dragging = hotspot.dataset.id;
+        selectHotspot(hotspot.dataset.id);
+        e.preventDefault();
+      }
+    }
+
+    // 处理鼠标移动
+    function handleMouseMove(e) {
+      const rect = mapImage.getBoundingClientRect();
+      const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+      const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+
+      if (state.dragging) {
+        const h = state.hotspots.find(h => h.id === state.dragging);
+        if (h) {
+          h.x = x;
+          h.y = y;
+          renderHotspots();
+          renderList();
+        }
+      }
+
+      if (state.resizing) {
+        const h = state.hotspots.find(h => h.id === state.resizing);
+        if (h) {
+          // 计算新半径
+          const dx = x - h.x;
+          const dy = y - h.y;
+          h.radius = Math.max(2, Math.min(25, Math.sqrt(dx * dx + dy * dy)));
+          renderHotspots();
+          renderList();
+        }
+      }
+    }
+
+    // 处理鼠标松开
+    function handleMouseUp() {
+      state.dragging = null;
+      state.resizing = null;
+    }
+
+    // 创建热区
+    function createHotspot(x, y) {
+      const id = `hotspot-${state.nextId++}`;
+      const hotspot = {
+        id,
+        name: `新热区 ${state.nextId - 1}`,
+        type: 'monster',
+        level: 10,
+        x,
+        y,
+        radius: 5
+      };
+
+      state.hotspots.push(hotspot);
+      selectHotspot(id);
+      setTool('select');
+    }
+
+    // 选择热区
+    function selectHotspot(id) {
+      state.selectedId = id;
+      renderHotspots();
+      renderList();
+
+      const h = state.hotspots.find(h => h.id === id);
+      if (h) {
+        editPanel.style.display = 'block';
+        document.getElementById('edit-name').value = h.name;
+        document.getElementById('edit-type').value = h.type;
+        document.getElementById('edit-level').value = h.level || 10;
+        document.getElementById('edit-id').value = h.id;
+        document.getElementById('edit-radius').value = h.radius;
+      }
+    }
+
+    // 保存编辑
+    function saveEdit() {
+      const h = state.hotspots.find(h => h.id === state.selectedId);
+      if (!h) return;
+
+      h.name = document.getElementById('edit-name').value || h.name;
+      h.type = document.getElementById('edit-type').value;
+      h.level = parseInt(document.getElementById('edit-level').value) || null;
+      h.id = document.getElementById('edit-id').value || h.id;
+      h.radius = parseFloat(document.getElementById('edit-radius').value) || 5;
+
+      renderHotspots();
+      renderList();
+      showToast('已保存');
+    }
+
+    // 删除热区
+    function deleteHotspot() {
+      if (!state.selectedId) return;
+      if (!confirm('确定删除此热区吗？')) return;
+
+      state.hotspots = state.hotspots.filter(h => h.id !== state.selectedId);
+      state.selectedId = null;
+      editPanel.style.display = 'none';
+      renderHotspots();
+      renderList();
+    }
+
+    // 导出配置
+    function exportConfig() {
+      const config = {
+        version: "1.0.0",
+        map: "fullmap.png",
+        monsters: state.hotspots.filter(h => h.type === 'monster').map(h => ({
+          id: h.id,
+          name: h.name,
+          level: h.level,
+          position: { x: Math.round(h.x * 10) / 10, y: Math.round(h.y * 10) / 10 },
+          hitboxRadius: h.radius
+        })),
+        resources: state.hotspots.filter(h => h.type === 'resource').map(h => ({
+          id: h.id,
+          name: h.name,
+          position: { x: Math.round(h.x * 10) / 10, y: Math.round(h.y * 10) / 10 },
+          hitboxRadius: h.radius
+        })),
+        regions: state.hotspots.filter(h => h.type === 'region').map(h => ({
+          id: h.id,
+          name: h.name,
+          position: { x: Math.round(h.x * 10) / 10, y: Math.round(h.y * 10) / 10 },
+          hitboxRadius: h.radius
+        }))
+      };
+
+      document.getElementById('output-json').value = JSON.stringify(config, null, 2);
+    }
+
+    // 复制到剪贴板
+    function copyToClipboard() {
+      const textarea = document.getElementById('output-json');
+      if (!textarea.value) {
+        alert('请先生成配置文件！');
+        return;
+      }
+      textarea.select();
+      document.execCommand('copy');
+      showToast('已复制到剪贴板！');
+    }
+
+    // 显示提示
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(78, 205, 196, 0.9);
+        color: #000;
+        padding: 10px 20px;
+        border-radius: 5px;
+        z-index: 1000;
+      `;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    }
+
+    // 点击涟漪
+    mapArea.addEventListener('click', (e) => {
+      const ripple = document.createElement('div');
+      ripple.className = 'click-ripple';
+      ripple.style.left = e.clientX - mapArea.getBoundingClientRect().left + 'px';
+      ripple.style.top = e.clientY - mapArea.getBoundingClientRect().top + 'px';
+      mapArea.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 500);
+    });
+
+    // 启动
+    init();
+  </script>
+</body>
+</html>

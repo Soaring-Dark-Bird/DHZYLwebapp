@@ -1,0 +1,130 @@
+{
+  "materials": [
+    {
+      "id": "mat-10-1",
+      "level": 10,
+      "name": "山铁碎片",
+      "description": "山铁经山野铁匠粗锻而成的碎片",
+      "image": "/assets/images/items/mat-10-1.png",
+      "type": "drop",
+      "usedFor": ["blade-9"]
+    },
+    {
+      "id": "mat-10-2",
+      "level": 10,
+      "name": "狌狌皮毛",
+      "description": "狌狌的皮毛，可用于制作刀柄",
+      "image": "/assets/images/items/mat-10-2.png",
+      "type": "drop",
+      "usedFor": ["blade-9"]
+    },
+    {
+      "id": "mat-9-1",
+      "level": 9,
+      "name": "桂木纤维",
+      "description": "桂木的纤维，用于制作刀柄",
+      "image": "/assets/images/items/mat-9-1.png",
+      "type": "gather",
+      "usedFor": ["blade-9", "blade-8"]
+    },
+    {
+      "id": "mat-9-2",
+      "level": 9,
+      "name": "鹿蜀尾毛",
+      "description": "鹿蜀的尾毛，用于装饰",
+      "image": "/assets/images/items/mat-9-2.png",
+      "type": "drop",
+      "usedFor": []
+    },
+    {
+      "id": "mat-9-3",
+      "level": 9,
+      "name": "青兕骨",
+      "description": "青兕的骨头，坚韧异常",
+      "image": "/assets/images/items/mat-9-3.png",
+      "type": "drop",
+      "usedFor": ["blade-9", "blade-8"]
+    },
+    {
+      "id": "mat-9-4",
+      "level": 9,
+      "name": "精铁",
+      "description": "9级精炼的铁，用于锻造刀身",
+      "image": "/assets/images/items/mat-9-4.png",
+      "type": "gather",
+      "usedFor": ["blade-9"]
+    },
+    {
+      "id": "mat-9-5",
+      "level": 9,
+      "name": "山铁",
+      "description": "南山经·招摇山一带的优质山铁",
+      "image": "/assets/images/items/mat-9-4.png",
+      "type": "gather",
+      "usedFor": []
+    },
+    {
+      "id": "mat-9-6",
+      "level": 9,
+      "name": "桂木",
+      "description": "南山经一带的桂木，可提炼为桂木纤维",
+      "image": "/assets/images/items/mat-9-1.png",
+      "type": "gather",
+      "usedFor": []
+    },
+    {
+      "id": "mat-9-7",
+      "level": 9,
+      "name": "精铁碎片",
+      "description": "精铁锻造时产生的碎片",
+      "image": "/assets/images/items/mat-9-4.png",
+      "type": "drop",
+      "usedFor": ["blade-9", "blade-8"]
+    },
+    {
+      "id": "mat-8-1",
+      "level": 8,
+      "name": "灵犀藤种子",
+      "description": "灵犀藤的种子，蕴含灵���",
+      "image": "/assets/images/items/mat-8-1.png",
+      "type": "drop",
+      "usedFor": ["blade-8"]
+    },
+    {
+      "id": "mat-8-2",
+      "level": 8,
+      "name": "朏朏皮毛",
+      "description": "朏朏的皮毛，柔软坚韧",
+      "image": "/assets/images/items/mat-8-2.png",
+      "type": "drop",
+      "usedFor": ["blade-8"]
+    },
+    {
+      "id": "mat-8-3",
+      "level": 8,
+      "name": "蠪蚳之角",
+      "description": "蠪蚳的角，坚硬锋利",
+      "image": "/assets/images/items/mat-8-3.png",
+      "type": "drop",
+      "usedFor": []
+    },
+    {
+      "id": "mat-8-4",
+      "level": 8,
+      "name": "赤铜矿石",
+      "description": "8级赤铜的原矿石",
+      "image": "/assets/images/items/mat-8-4.png",
+      "type": "gather",
+      "usedFor": ["blade-8"]
+    },
+    {
+      "id": "mat-8-5",
+      "level": 8,
+      "name": "灵犀藤",
+      "description": "中部区块・霍山一带的灵犀藤",
+      "image": "/assets/images/items/mat-8-1.png",
+      "type": "gather",
+      "usedFor": ["blade-8"]
+    }
+  ]
+}

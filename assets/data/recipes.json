@@ -1,0 +1,28 @@
+{
+  "recipes": [
+    {
+      "from": "blade-10",
+      "to": "blade-9",
+      "materials": [
+        { "materialId": "mat-9-4", "quantity": 3 },
+        { "materialId": "mat-9-3", "quantity": 4 },
+        { "materialId": "mat-10-1", "quantity": 3 },
+        { "materialId": "mat-9-1", "quantity": 4 },
+        { "materialId": "mat-9-7", "quantity": 3 },
+        { "materialId": "mat-10-2", "quantity": 4 }
+      ]
+    },
+    {
+      "from": "blade-9",
+      "to": "blade-8",
+      "materials": [
+        { "materialId": "mat-8-5", "quantity": 4 },
+        { "materialId": "mat-8-1", "quantity": 3 },
+        { "materialId": "mat-9-7", "quantity": 4 },
+        { "materialId": "mat-8-4", "quantity": 3 },
+        { "materialId": "mat-8-2", "quantity": 4 },
+        { "materialId": "mat-9-1", "quantity": 3 }
+      ]
+    }
+  ]
+}
